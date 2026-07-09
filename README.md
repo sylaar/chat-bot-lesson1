@@ -33,3 +33,4 @@ python script.py
 
 
 ## Пример запуска
+<img width="482" height="118" alt="Снимок экрана — 2026-07-09 в 22 12 27" src="https://github.com/user-attachments/assets/7d1e7c7f-8300-4c79-9ab4-442959c9962c" />
