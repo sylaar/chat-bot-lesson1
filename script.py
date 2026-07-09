@@ -1,3 +1,5 @@
+import logging
+from logging.handlers import RotatingFileHandler
 import os
 from time import sleep
 
@@ -6,16 +8,21 @@ import telegram
 from dotenv import load_dotenv
 
 
+logger = logging.getLogger(__file__)
+
 def main():
+    logger.info('Running')
     load_dotenv()
     devman_token = os.environ['DEVMAN_TOKEN']
     tg_token = os.environ['TG_TOKEN']
     bot = telegram.Bot(token=tg_token)
     first_connection = True
+
     while True:
         try:
             chat_id = bot.get_updates()[-1].message.chat_id
-        except telegram.error.TelegramError:
+        except telegram.error.TelegramError as err:
+            logger.warning('%s', err)
             if first_connection:
                 first_connection = False
                 continue
@@ -35,9 +42,11 @@ def main():
                 )
             response.raise_for_status()
             response_data = response.json()
-        except requests.exceptions.ReadTimeout:
+        except requests.exceptions.ReadTimeout as err:
+            logger.warning('%s' % (err))
             continue
-        except requests.exceptions.ConnectionError:
+        except requests.exceptions.ConnectionError as err:
+            logger.warning('%s' % (err))
             sleep(5)
             continue
         if response_data.get('status') == 'timeout':
@@ -55,4 +64,9 @@ def main():
 
 
 if __name__ == '__main__':
+    logger.setLevel(logging.INFO)
+    handler = logging.FileHandler('script.log')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
     main()
