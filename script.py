@@ -1,5 +1,4 @@
 import logging
-from logging.handlers import RotatingFileHandler
 import os
 from time import sleep
 
@@ -9,6 +8,7 @@ from dotenv import load_dotenv
 
 
 logger = logging.getLogger(__file__)
+
 
 def main():
     logger.info('Running')
