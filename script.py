@@ -11,7 +11,13 @@ logger = logging.getLogger(__file__)
 
 
 def main():
+    logger.setLevel(logging.INFO)
+    handler = logging.FileHandler('script.log')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
     logger.info('Running')
+    
     load_dotenv()
     devman_token = os.environ['DEVMAN_TOKEN']
     tg_token = os.environ['TG_TOKEN']
@@ -29,33 +35,32 @@ def main():
             sleep(5)
             continue
 
-        API_DEVMAN = 'https://dvmn.org/api/long_polling/'
+        api_devman = 'https://dvmn.org/api/long_polling/'
         headers = {'Authorization': devman_token}
         params = {}
 
         try:
             response = requests.get(
-                url=API_DEVMAN,
+                url=api_devman,
                 headers=headers,
                 params=params,
                 timeout=90,
                 )
             response.raise_for_status()
-            response_data = response.json()
-        except requests.exceptions.ReadTimeout as err:
-            logger.warning('%s' % (err))
+            serialized_response = response.json()
+        except requests.exceptions.ReadTimeout:
             continue
         except requests.exceptions.ConnectionError as err:
             logger.warning('%s' % (err))
             sleep(5)
             continue
-        if response_data.get('status') == 'timeout':
-            params['timestamp'] = response_data.get('timestamp_to_request')
+        if serialized_response.get('status') == 'timeout':
+            params['timestamp'] = serialized_response.get('timestamp_to_request')
             continue
-        if response_data.get('status') == 'found':
-            job_name = response_data['new_attempts'][0]['lesson_title']
-            result_of_validate = response_data['new_attempts'][0]['is_negative']
-            lesson_url = response_data['new_attempts'][0]['lesson_url']
+        if serialized_response.get('status') == 'found':
+            job_name = serialized_response['new_attempts'][0]['lesson_title']
+            result_of_validate = serialized_response['new_attempts'][0]['is_negative']
+            lesson_url = serialized_response['new_attempts'][0]['lesson_url']
             bot.send_message(
                 chat_id=chat_id,
                 text=f'У вас проверили работу "{job_name}"\n'
@@ -64,9 +69,4 @@ def main():
 
 
 if __name__ == '__main__':
-    logger.setLevel(logging.INFO)
-    handler = logging.FileHandler('script.log')
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
     main()
